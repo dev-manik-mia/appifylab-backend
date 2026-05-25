@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         User::factory()->count(49)->create();
 
-        User::firstOrCreate(
+        User::query()->firstOrCreate(
             ['email' => 'test@example.com'],
             [
                 'first_name' => 'Test',
