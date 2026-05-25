@@ -2,7 +2,7 @@
 
 namespace App\Actions\Auth;
 
-use App\Data\DTOS\Auth\RegisterDTO;
+use App\DTOs\Auth\RegisterDTO;
 use App\Models\User;
 use App\Supports\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +12,7 @@ class RegisterAction
 {
     public function execute(RegisterDTO $dto): JsonResponse
     {
-        $user = User::create([
+        $user = User::query()->create([
             'first_name' => $dto->firstName,
             'last_name' => $dto->lastName,
             'email' => $dto->email,

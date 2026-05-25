@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('comment_reactive', function (Blueprint $table) {
+        Schema::create('comment_reactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('comment_id')->constrained()->cascadeOnDelete();
@@ -16,11 +16,13 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['user_id', 'comment_id']);
+            $table->index(['comment_id', 'reaction_id'], 'comment_reactions_comment_reaction_idx');
+            $table->index(['user_id', 'comment_id'], 'comment_reactions_user_comment_idx');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('comment_reactive');
+        Schema::dropIfExists('comment_reactions');
     }
 };

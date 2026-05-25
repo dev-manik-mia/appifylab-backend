@@ -20,21 +20,38 @@ class PostSeeder extends Seeder
         $users = User::all();
 
         if ($users->isEmpty()) {
-            $users = User::factory(5)->create();
+            $users = User::factory(50)->create();
         }
 
-        $users->each(function (User $user) {
-            Post::factory()
-                ->count(fake()->numberBetween(2, 5))
-                ->public()
-                ->create(['user_id' => $user->id]);
-        });
+        $posts = [];
+        $now = now();
 
-        $users->each(function (User $user) {
-            Post::factory()
-                ->count(fake()->numberBetween(0, 2))
-                ->private()
-                ->create(['user_id' => $user->id]);
-        });
+        foreach ($users as $user) {
+            for ($i = 0; $i < 16; $i++) {
+                $posts[] = [
+                    'user_id' => $user->id,
+                    'content' => fake()->paragraphs(2, true),
+                    'image' => null,
+                    'visibility' => 'public',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            for ($i = 0; $i < 4; $i++) {
+                $posts[] = [
+                    'user_id' => $user->id,
+                    'content' => fake()->paragraphs(2, true),
+                    'image' => null,
+                    'visibility' => 'private',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        foreach (array_chunk($posts, 100) as $chunk) {
+            Post::insert($chunk);
+        }
     }
 }

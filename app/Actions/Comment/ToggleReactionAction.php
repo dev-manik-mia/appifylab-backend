@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Actions\Post;
+namespace App\Actions\Comment;
 
-use App\DTOs\Post\TogglePostReactionDTO;
-use App\Models\PostReaction;
+use App\DTOs\Comment\ToggleCommentReactionDTO;
+use App\Models\CommentReaction;
 use App\Models\Reaction;
 
 final class ToggleReactionAction
 {
-    public function execute(TogglePostReactionDTO $dto): array
+    public function execute(ToggleCommentReactionDTO $dto): array
     {
-        $existing = PostReaction::query()->where('user_id', $dto->userId)
-            ->where('post_id', $dto->postId)
+        $existing = CommentReaction::query()->where('user_id', $dto->userId)
+            ->where('comment_id', $dto->commentId)
             ->first();
 
         if ($existing) {
@@ -20,7 +20,7 @@ final class ToggleReactionAction
 
                 return [
                     'my_reaction' => null,
-                    'reactions' => $this->getPostReactions($dto->postId),
+                    'reactions' => $this->getCommentReactions($dto->commentId),
                 ];
             }
 
@@ -28,13 +28,13 @@ final class ToggleReactionAction
 
             return [
                 'my_reaction' => $existing->reaction->name,
-                'reactions' => $this->getPostReactions($dto->postId),
+                'reactions' => $this->getCommentReactions($dto->commentId),
             ];
         }
 
-        PostReaction::query()->create([
+        CommentReaction::query()->create([
             'user_id' => $dto->userId,
-            'post_id' => $dto->postId,
+            'comment_id' => $dto->commentId,
             'reaction_id' => $dto->reactionId,
         ]);
 
@@ -43,18 +43,18 @@ final class ToggleReactionAction
 
         return [
             'my_reaction' => $reaction->name,
-            'reactions' => $this->getPostReactions($dto->postId),
+            'reactions' => $this->getCommentReactions($dto->commentId),
         ];
     }
 
-    private function getPostReactions(int $postId): array
+    private function getCommentReactions(int $commentId): array
     {
-        return PostReaction::query()->where('post_id', $postId)
+        return CommentReaction::query()->where('comment_id', $commentId)
             ->with(['user', 'reaction'])
             ->get()
-            ->map(fn (PostReaction $reactive) => [
+            ->map(fn (CommentReaction $reactive) => [
                 'id' => $reactive->id,
-                'post_id' => $reactive->post_id,
+                'comment_id' => $reactive->comment_id,
                 'user_id' => $reactive->user_id,
                 'type' => $reactive->reaction->name,
                 'user' => $reactive->user,

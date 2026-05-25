@@ -5,7 +5,7 @@ namespace App\Actions\Post;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 final class DeleteAction
 {
@@ -16,7 +16,7 @@ final class DeleteAction
                 response()->json([
                     'success' => false,
                     'message' => 'You can only delete your own posts',
-                ], Response::HTTP_FORBIDDEN)
+                ], ResponseAlias::HTTP_FORBIDDEN)
             );
         }
 

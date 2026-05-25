@@ -19,10 +19,30 @@ use Illuminate\Support\Carbon;
 class Reaction extends Model
 {
     public const LIKE = 'like';
+
     public const LOVE = 'love';
+
     public const HAHA = 'haha';
+
     public const WOW = 'wow';
+
     public const SAD = 'sad';
+
     public const CARE = 'care';
+
     public const ANGRY = 'angry';
+
+    public const LIKE_ID = 1;
+
+    public const LOVE_ID = 2;
+
+    public const HAHA_ID = 3;
+
+    public const WOW_ID = 4;
+
+    public const SAD_ID = 5;
+
+    public const CARE_ID = 6;
+
+    public const ANGRY_ID = 7;
 }

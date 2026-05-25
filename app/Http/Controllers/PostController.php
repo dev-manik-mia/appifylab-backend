@@ -9,6 +9,7 @@ use App\Actions\Post\StoreAction;
 use App\DTOs\Post\CreatePostDTO;
 use App\Models\Post;
 use App\Supports\ApiResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
@@ -21,38 +22,67 @@ class PostController extends Controller
      */
     public function index(): JsonResponse
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $posts = (new IndexAction())->execute($user);
+            $posts = (new IndexAction)->execute($user);
 
-        return ApiResponse::success($posts);
+            return ApiResponse::success($posts);
+        } catch (QueryException $e) {
+            return ApiResponse::error('Failed to fetch posts', 500);
+        }
     }
 
+    /**
+     * @throws JWTException
+     */
     public function store(Request $request): JsonResponse
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $dto = CreatePostDTO::fromRequest($request, $user->id);
-        $post = (new StoreAction())->execute($dto);
+            $dto = CreatePostDTO::fromRequest($request, $user->id);
+            $post = (new StoreAction)->execute($dto);
 
-        return ApiResponse::created($post, 'Post created successfully');
+            return ApiResponse::created($post, 'Post created successfully');
+        } catch (QueryException $e) {
+            return ApiResponse::error('Failed to create post', 500);
+        }
     }
 
+    /**
+     * @throws JWTException
+     */
     public function show(Post $post): JsonResponse
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $result = (new ShowAction())->execute($post, $user);
+            if ($post->visibility === 'private' && $post->user_id !== $user->id) {
+                return ApiResponse::notFound('Post not found');
+            }
 
-        return ApiResponse::success($result);
+            $result = (new ShowAction)->execute($post, $user);
+
+            return ApiResponse::success($result);
+        } catch (QueryException $e) {
+            return ApiResponse::error('Failed to fetch post', 500);
+        }
     }
 
+    /**
+     * @throws JWTException
+     */
     public function destroy(Post $post): JsonResponse
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
 
-        (new DeleteAction())->execute($post, $user);
+            (new DeleteAction)->execute($post, $user);
 
-        return ApiResponse::success(null, 'Post deleted successfully');
+            return ApiResponse::success(null, 'Post deleted successfully');
+        } catch (QueryException $e) {
+            return ApiResponse::error('Failed to delete post', 500);
+        }
     }
 }

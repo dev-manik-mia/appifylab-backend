@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PostVisibility;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,7 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -22,6 +22,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property bool $is_liked
+ * @property string|null $my_reaction
  *
  * @mixin Builder
  */
@@ -48,20 +50,33 @@ class Post extends Model
         return $this->hasMany(Comment::class);
     }
 
-    public function likes(): MorphMany
+    public function reactions(): HasMany
     {
-        return $this->morphMany(Like::class, 'likeable');
+        return $this->hasMany(PostReaction::class);
+    }
+
+    public function likes(): HasMany
+    {
+        return $this->hasMany(PostReaction::class)->where('reaction_id', Reaction::LIKE_ID);
     }
 
     public function scopePublic(Builder $query): Builder
     {
-        return $query->where('visibility', 'public');
+        return $query->where('visibility', PostVisibility::PUBLIC->value);
     }
 
     public function scopeFeedForUser(Builder $query, User $user): Builder
     {
         return $query->where(fn (Builder $q) => $q
-            ->where('visibility', 'public')
+            ->where('visibility', PostVisibility::PUBLIC->value)
+            ->orWhere('user_id', $user->id)
+        );
+    }
+
+    public function scopeVisibleForUser(Builder $query, User $user): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('visibility', PostVisibility::PUBLIC->value)
             ->orWhere('user_id', $user->id)
         );
     }

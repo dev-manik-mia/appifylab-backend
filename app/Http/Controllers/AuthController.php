@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Actions\Auth\LoginAction;
 use App\Actions\Auth\RegisterAction;
-use App\Data\DTOS\Auth\LoginDTO;
-use App\Data\DTOS\Auth\RegisterDTO;
+use App\DTOs\Auth\LoginDTO;
+use App\DTOs\Auth\RegisterDTO;
 use App\Supports\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -22,6 +23,7 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         try {
+
             $dto = RegisterDTO::fromRequest($request->all());
 
             return $this->registerAction->execute($dto);
@@ -33,6 +35,7 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         try {
+
             $dto = LoginDTO::fromRequest($request->all());
 
             return $this->loginAction->execute($dto);
@@ -41,6 +44,9 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * @throws JWTException
+     */
     public function me(): JsonResponse
     {
         $user = JWTAuth::parseToken()->authenticate();
@@ -52,6 +58,9 @@ class AuthController extends Controller
         return ApiResponse::success($user);
     }
 
+    /**
+     * @throws JWTException
+     */
     public function logout(): JsonResponse
     {
         JWTAuth::parseToken()->invalidate(true);
@@ -59,6 +68,9 @@ class AuthController extends Controller
         return ApiResponse::success(null, 'Logged out successfully');
     }
 
+    /**
+     * @throws JWTException
+     */
     public function refresh(): JsonResponse
     {
         $token = JWTAuth::parseToken()->refresh();

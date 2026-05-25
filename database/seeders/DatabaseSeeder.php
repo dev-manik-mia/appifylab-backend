@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        User::factory()->count(49)->create();
+
         User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
@@ -25,7 +27,7 @@ class DatabaseSeeder extends Seeder
             ReactionSeeder::class,
             PostSeeder::class,
             CommentSeeder::class,
-            LikeSeeder::class,
+            PostReactionSeeder::class,
         ]);
     }
 }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['post_id', 'parent_id', 'created_at']);
+            $table->index(['user_id', 'created_at'], 'comments_user_created_idx');
         });
     }
 

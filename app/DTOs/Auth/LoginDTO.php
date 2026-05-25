@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Data\DTOS\Auth;
+namespace App\DTOs\Auth;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;

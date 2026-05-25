@@ -5,12 +5,28 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
+/**
+ * @property int $id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property string $password
+ *
+ * @mixin Model
+ *
+ * @property Collection<int,Post> $posts
+ * @property Collection<int,Comment> $comments
+ * @property Collection<int,PostReaction> $postReactions
+ * @property Collection<int,CommentReaction> $commentReactions
+ */
 #[Fillable(['first_name', 'last_name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements JWTSubject
@@ -46,8 +62,13 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Comment::class);
     }
 
-    public function likes(): HasMany
+    public function postReactions(): HasMany
     {
-        return $this->hasMany(Like::class);
+        return $this->hasMany(PostReaction::class);
+    }
+
+    public function commentReactions(): HasMany
+    {
+        return $this->hasMany(CommentReaction::class);
     }
 }

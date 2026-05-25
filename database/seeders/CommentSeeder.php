@@ -20,6 +20,7 @@ class CommentSeeder extends Seeder
 
         $users = User::all();
         $posts = Post::all();
+        $userIds = $users->pluck('id');
 
         if ($posts->isEmpty()) {
             $this->command->warn('No posts found. Run PostSeeder first.');
@@ -27,23 +28,49 @@ class CommentSeeder extends Seeder
             return;
         }
 
-        $posts->each(function (Post $post) use ($users) {
-            $topLevelComments = Comment::factory()
-                ->count(fake()->numberBetween(0, 4))
-                ->create([
-                    'post_id' => $post->id,
-                    'user_id' => $users->random()->id,
-                ]);
+        $comments = [];
+        $now = now();
 
-            $topLevelComments->each(function (Comment $comment) use ($users) {
-                Comment::factory()
-                    ->count(fake()->numberBetween(0, 3))
-                    ->reply($comment)
-                    ->create([
-                        'post_id' => $comment->post_id,
-                        'user_id' => $users->random()->id,
-                    ]);
-            });
-        });
+        foreach ($posts as $post) {
+            $commentCount = fake()->numberBetween(0, 4);
+            $topLevelIds = [];
+
+            for ($i = 0; $i < $commentCount; $i++) {
+                $comments[] = [
+                    'user_id' => $userIds->random(),
+                    'post_id' => $post->id,
+                    'parent_id' => null,
+                    'content' => fake()->paragraph(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        foreach (array_chunk($comments, 100) as $chunk) {
+            Comment::insert($chunk);
+        }
+
+        $topLevel = Comment::whereNull('parent_id')->get();
+
+        $replies = [];
+        foreach ($topLevel as $comment) {
+            $replyCount = fake()->numberBetween(0, 3);
+
+            for ($i = 0; $i < $replyCount; $i++) {
+                $replies[] = [
+                    'user_id' => $userIds->random(),
+                    'post_id' => $comment->post_id,
+                    'parent_id' => $comment->id,
+                    'content' => fake()->paragraph(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        foreach (array_chunk($replies, 100) as $chunk) {
+            Comment::insert($chunk);
+        }
     }
 }

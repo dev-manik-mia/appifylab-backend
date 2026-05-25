@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -51,9 +50,14 @@ class Comment extends Model
         return $this->hasMany(Comment::class, 'parent_id');
     }
 
-    public function likes(): MorphMany
+    public function reactions(): HasMany
     {
-        return $this->morphMany(Like::class, 'likeable');
+        return $this->hasMany(CommentReaction::class);
+    }
+
+    public function likes(): HasMany
+    {
+        return $this->hasMany(CommentReaction::class)->where('reaction_id', Reaction::LIKE_ID);
     }
 
     public function scopeParentOnly(Builder $query): Builder

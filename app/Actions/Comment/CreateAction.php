@@ -2,7 +2,7 @@
 
 namespace App\Actions\Comment;
 
-use App\Data\DTOS\Comment\CreateCommentDTO;
+use App\DTOs\Comment\CreateCommentDTO;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Supports\ApiResponse;
@@ -13,11 +13,11 @@ class CreateAction
     public function execute(CreateCommentDTO $dto): JsonResponse
     {
         /** @var Post|null $post */
-        $post = Post::findOrFail($dto->postId);
+        $post = Post::query()->findOrFail($dto->postId);
 
         if ($dto->parentId) {
             /** @var Comment $parent */
-            $parent = Comment::findOrFail($dto->parentId);
+            $parent = Comment::query()->findOrFail($dto->parentId);
 
             if ($parent->post_id !== $post->id) {
                 return ApiResponse::error('Parent comment does not belong to this post', 422);

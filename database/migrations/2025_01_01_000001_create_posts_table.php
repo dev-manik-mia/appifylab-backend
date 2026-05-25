@@ -18,6 +18,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['visibility', 'created_at']);
+            $table->index(['user_id', 'created_at'], 'posts_user_created_idx');
         });
     }
 

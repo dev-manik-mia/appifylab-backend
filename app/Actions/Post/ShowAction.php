@@ -2,8 +2,11 @@
 
 namespace App\Actions\Post;
 
+use App\Actions\Comment\IndexAction as CommentIndexAction;
 use App\Http\Resources\CommentResource;
 use App\Models\Post;
+use App\Models\PostReaction;
+use App\Models\Reaction;
 use App\Models\User;
 
 final class ShowAction
@@ -12,19 +15,17 @@ final class ShowAction
     {
         $post->load(['user'])
             ->loadCount(['comments', 'likes']);
-        $post->is_liked = $post->likes()->where('user_id', $user->id)->exists();
 
-        $comments = $post->comments()
-            ->parentOnly()
-            ->with([
-                'user',
-                'replies.user',
-                'replies.replies.user',
-                'replies.replies.replies.user',
-            ])
-            ->withCount(['likes', 'replies'])
-            ->latest()
-            ->get();
+        /** @var PostReaction|null $userReaction */
+        $userReaction = $post->reactions()
+            ->where('user_id', $user->id)
+            ->with('reaction')
+            ->first();
+
+        $post->is_liked = $userReaction?->reaction_id === Reaction::LIKE_ID;
+        $post->my_reaction = $userReaction?->reaction?->name;
+
+        $comments = (new CommentIndexAction)->execute($post, $user);
 
         return [
             'post' => $post,

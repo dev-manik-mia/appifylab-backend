@@ -9,7 +9,7 @@ final class StoreAction
 {
     public function execute(CreatePostDTO $dto): Post
     {
-        $post = Post::create([
+        $post = Post::query()->create([
             'user_id' => $dto->userId,
             'content' => $dto->content,
             'visibility' => $dto->visibility,

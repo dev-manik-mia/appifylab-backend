@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Data\DTOS\Comment;
+namespace App\DTOs\Comment;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
