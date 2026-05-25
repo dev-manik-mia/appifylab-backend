@@ -17,7 +17,7 @@ final class IndexAction
     {
         $posts = Post::with(['user', 'reactions.user', 'reactions.reaction'])
             ->withCount([
-                'comments',
+                'comments as comments_count' => fn ($q) => $q->whereNull('parent_id'),
                 'likes',
             ])
             ->where(fn (Builder $q) => $q

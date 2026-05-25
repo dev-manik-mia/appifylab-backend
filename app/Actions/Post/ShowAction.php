@@ -14,7 +14,10 @@ final class ShowAction
     public function execute(Post $post, User $user): array
     {
         $post->load(['user'])
-            ->loadCount(['comments', 'likes']);
+            ->loadCount([
+                'comments as comments_count' => fn ($q) => $q->whereNull('parent_id'),
+                'likes',
+            ]);
 
         /** @var PostReaction|null $userReaction */
         $userReaction = $post->reactions()

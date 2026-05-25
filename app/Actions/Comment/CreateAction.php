@@ -3,6 +3,7 @@
 namespace App\Actions\Comment;
 
 use App\DTOs\Comment\CreateCommentDTO;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Supports\ApiResponse;
@@ -32,7 +33,11 @@ class CreateAction
         ]);
 
         $comment->load(['user']);
+        $comment->loadCount('likes');
 
-        return ApiResponse::created($comment, 'Comment created successfully');
+        return ApiResponse::created(
+            new CommentResource($comment),
+            'Comment created successfully'
+        );
     }
 }

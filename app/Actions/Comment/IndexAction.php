@@ -4,7 +4,6 @@ namespace App\Actions\Comment;
 
 use App\Models\Post;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 final class IndexAction
@@ -28,7 +27,7 @@ final class IndexAction
 
         return [
             'user',
-            'replies' => fn (Builder $q) => $q
+            'replies' => fn ($q) => $q
                 ->with($this->repliesWith($user, $depth - 1))
                 ->withCount(['replies', 'likes'])
                 ->withExists(['likes as is_liked' => fn ($lq) => $lq->where('user_id', $user->id)]),
