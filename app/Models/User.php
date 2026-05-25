@@ -18,6 +18,7 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
  * @property string $first_name
  * @property string $last_name
  * @property string $email
+ * @property string|null $profile_image
  * @property string $password
  *
  * @mixin Model
@@ -27,7 +28,7 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
  * @property Collection<int,PostReaction> $postReactions
  * @property Collection<int,CommentReaction> $commentReactions
  */
-#[Fillable(['first_name', 'last_name', 'email', 'password'])]
+#[Fillable(['first_name', 'last_name', 'email', 'password', 'profile_image'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements JWTSubject
 {

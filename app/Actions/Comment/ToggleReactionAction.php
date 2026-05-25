@@ -26,8 +26,11 @@ final class ToggleReactionAction
 
             $existing->update(['reaction_id' => $dto->reactionId]);
 
+            /** @var Reaction $reaction */
+            $reaction = Reaction::find($dto->reactionId);
+
             return [
-                'my_reaction' => $existing->reaction->name,
+                'my_reaction' => $reaction->name,
                 'reactions' => $this->getCommentReactions($dto->commentId),
             ];
         }

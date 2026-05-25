@@ -55,6 +55,7 @@ class ReactionController extends Controller
             ->get()
             ->map(fn ($reactive) => [
                 'id' => $reactive->id,
+                'post_id' => $reactive->post_id,
                 'user_id' => $reactive->user_id,
                 'type' => $reactive->reaction->name,
                 'user' => $reactive->user,
@@ -74,6 +75,7 @@ class ReactionController extends Controller
             ->get()
             ->map(fn ($reactive) => [
                 'id' => $reactive->id,
+                'comment_id' => $reactive->comment_id,
                 'user_id' => $reactive->user_id,
                 'type' => $reactive->reaction->name,
                 'user' => $reactive->user,

@@ -15,7 +15,7 @@ final class IndexAction
 {
     public function execute(User $user): LengthAwarePaginator
     {
-        $posts = Post::with(['user'])
+        $posts = Post::with(['user', 'reactions.user', 'reactions.reaction'])
             ->withCount([
                 'comments',
                 'likes',
@@ -38,6 +38,17 @@ final class IndexAction
             $reaction = $userReactions->get($post->id);
             $post->is_liked = $reaction?->reaction_id === Reaction::LIKE_ID;
             $post->my_reaction = $reaction?->reaction?->name;
+
+            $post->reactions = $post->relationLoaded('reactions')
+                ? $post->reactions->map(fn ($r) => [
+                    'id' => $r->id,
+                    'post_id' => $r->post_id,
+                    'user_id' => $r->user_id,
+                    'type' => $r->reaction->name,
+                    'user' => $r->user,
+                    'created_at' => $r->created_at,
+                ])
+                : [];
 
             return $post;
         });

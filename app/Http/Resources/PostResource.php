@@ -23,8 +23,9 @@ class PostResource extends JsonResource
             'reactions' => $this->when($this->relationLoaded('reactions'), function () {
                 return $this->reactions->map(fn ($reaction) => [
                     'id' => $reaction->id,
+                    'post_id' => $reaction->post_id,
                     'user_id' => $reaction->user_id,
-                    'reaction' => $reaction->reaction->name,
+                    'type' => $reaction->reaction->name,
                     'user' => new UserResource($reaction->whenLoaded('user')),
                     'created_at' => $reaction->created_at,
                 ]);
