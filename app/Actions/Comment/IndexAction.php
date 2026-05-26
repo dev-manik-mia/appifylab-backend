@@ -5,21 +5,18 @@ namespace App\Actions\Comment;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
 
 final class IndexAction
 {
     public function execute(Post $post, User $user): Collection
     {
-        return Cache::remember("post:{$post->id}:comments:user:{$user->id}", 300, function () use ($post, $user) {
-            return $post->comments()
-                ->whereNull('parent_id')
-                ->with($this->repliesWith($user, 3))
-                ->withCount(['replies', 'likes'])
-                ->withExists(['likes as is_liked' => fn ($q) => $q->where('user_id', $user->id)])
-                ->latest()
-                ->get();
-        });
+        return $post->comments()
+            ->whereNull('parent_id')
+            ->with($this->repliesWith($user, 3))
+            ->withCount(['replies', 'likes'])
+            ->withExists(['likes as is_liked' => fn ($q) => $q->where('user_id', $user->id)])
+            ->latest()
+            ->get();
     }
 
     private function repliesWith(User $user, int $depth): array

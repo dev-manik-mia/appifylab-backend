@@ -21,6 +21,8 @@ Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::get('posts/{post}', [PostController::class, 'show']);
     Route::delete('posts/{post}', [PostController::class, 'destroy']);
 
+    Route::get('users/{user}/posts', [PostController::class, 'userPosts']);
+
     Route::get('posts/{post}/comments', [CommentController::class, 'index']);
     Route::post('posts/{post}/comments', [CommentController::class, 'store']);
     Route::delete('comments/{comment}', [CommentController::class, 'destroy']);

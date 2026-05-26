@@ -23,7 +23,7 @@ final class ToggleReactionAction
 
                 return [
                     'my_reaction' => null,
-                    'reactions' => $this->getGroupedReactions($dto->postId),
+                    'reactions' => $this->getReactions($dto->postId),
                 ];
             }
 
@@ -36,7 +36,7 @@ final class ToggleReactionAction
 
             return [
                 'my_reaction' => $reaction->name,
-                'reactions' => $this->getGroupedReactions($dto->postId),
+                'reactions' => $this->getReactions($dto->postId),
             ];
         }
 
@@ -53,21 +53,29 @@ final class ToggleReactionAction
 
         return [
             'my_reaction' => $reaction->name,
-            'reactions' => $this->getGroupedReactions($dto->postId),
+            'reactions' => $this->getReactions($dto->postId),
         ];
     }
 
-    private function getGroupedReactions(int $postId): array
+    private function getReactions(int $postId): array
     {
         return PostReaction::query()->where('post_id', $postId)
-            ->selectRaw('reaction_id, count(*) as count')
-            ->groupBy('reaction_id')
+            ->with(['user' => fn ($q) => $q->select('id', 'first_name', 'last_name', 'profile_image')])
             ->with('reaction:id,name')
+            ->latest()
             ->get()
-            ->map(fn (PostReaction $reactive) => [
-                'reaction_id' => $reactive->reaction_id,
-                'type' => $reactive->reaction->name,
-                'count' => (int) $reactive->count,
+            ->map(fn (PostReaction $r) => [
+                'id' => $r->id,
+                'post_id' => $r->post_id,
+                'user_id' => $r->user_id,
+                'type' => $r->reaction->name,
+                'user' => $r->user ? [
+                    'id' => $r->user->id,
+                    'first_name' => $r->user->first_name,
+                    'last_name' => $r->user->last_name,
+                    'profile_image' => $r->user->profile_image,
+                ] : null,
+                'created_at' => $r->created_at,
             ])
             ->toArray();
     }

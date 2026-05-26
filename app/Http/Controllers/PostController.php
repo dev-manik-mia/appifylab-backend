@@ -6,8 +6,10 @@ use App\Actions\Post\DeleteAction;
 use App\Actions\Post\IndexAction;
 use App\Actions\Post\ShowAction;
 use App\Actions\Post\StoreAction;
+use App\Actions\Post\UserPostsAction;
 use App\DTOs\Post\CreatePostDTO;
 use App\Models\Post;
+use App\Models\User;
 use App\Supports\ApiResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +27,19 @@ class PostController extends Controller
             report($e);
 
             return ApiResponse::error('Failed to fetch posts', 500);
+        }
+    }
+
+    public function userPosts(Request $request, User $user): JsonResponse
+    {
+        try {
+            $posts = (new UserPostsAction)->execute($request->user(), $user);
+
+            return ApiResponse::success($posts);
+        } catch (QueryException $e) {
+            report($e);
+
+            return ApiResponse::error('Failed to fetch user posts', 500);
         }
     }
 
