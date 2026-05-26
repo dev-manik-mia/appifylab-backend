@@ -2,35 +2,39 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class CommentResource extends JsonResource
 {
-    private int $depth;
-
-    public function __construct($resource, int $depth = 2)
-    {
-        parent::__construct($resource);
-        $this->depth = $depth;
-    }
-
     public function toArray(Request $request): array
     {
+        /** @var Comment $comment */
+        $comment = $this->resource;
+
         return [
-            'id' => $this->id,
-            'user_id' => $this->user_id,
-            'post_id' => $this->post_id,
-            'parent_id' => $this->parent_id,
-            'content' => $this->content,
-            'user' => new UserResource($this->whenLoaded('user')),
-            'replies' => $this->when($this->depth > 1 && $this->relationLoaded('replies'), function () {
-                return $this->replies->map(fn ($reply) => new static($reply, $this->depth - 1));
-            }),
+            'id' => $comment->id,
+            'user_id' => $comment->user_id,
+            'post_id' => $comment->post_id,
+            'parent_id' => $comment->parent_id,
+            'content' => $comment->content,
+
+            'user' => new UserResource(
+                $this->whenLoaded('user')
+            ),
+
+            'replies' => CommentResource::collection(
+                $this->whenLoaded('replies')
+            ),
+
+            'replies_count' => $this->whenCounted('replies'),
             'likes_count' => $this->whenCounted('likes'),
-            'is_liked' => $this->is_liked ?? false,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+
+            'is_liked' => $comment->is_liked ?? false,
+
+            'created_at' => $comment->created_at,
+            'updated_at' => $comment->updated_at,
         ];
     }
 }
