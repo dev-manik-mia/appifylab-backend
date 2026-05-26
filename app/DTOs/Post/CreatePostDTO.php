@@ -3,7 +3,6 @@
 namespace App\DTOs\Post;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 final class CreatePostDTO
 {
@@ -25,7 +24,7 @@ final class CreatePostDTO
         $imagePath = null;
         if ($request->hasFile('image')) {
             $storedPath = $request->file('image')->store('posts', 'public');
-            $imagePath = Storage::url($storedPath);
+            $imagePath = '/storage/'.$storedPath;
         }
 
         return new self(

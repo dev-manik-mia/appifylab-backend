@@ -11,10 +11,12 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
+// Refresh must be outside auth:api so it can accept expired tokens
+Route::post('refresh', [AuthController::class, 'refresh']);
+
 Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
-    Route::post('refresh', [AuthController::class, 'refresh']);
 
     Route::get('posts', [PostController::class, 'index']);
     Route::post('posts', [PostController::class, 'store']);
