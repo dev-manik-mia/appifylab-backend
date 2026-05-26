@@ -16,6 +16,6 @@ final class DeleteAction
         $post->delete();
 
         Cache::forget("post:{$post->id}");
-        Cache::increment('posts:feed:v:'.$user->id);
+        Cache::tags(['posts:feed', 'user:'.$user->id])->flush();
     }
 }

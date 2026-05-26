@@ -17,7 +17,7 @@ final class StoreAction
             'image' => $dto->imagePath,
         ]);
 
-        Cache::increment('posts:feed:v:'.$dto->userId);
+        Cache::tags(['posts:feed', 'user:'.$dto->userId])->flush();
 
         return $post->load(['user' => fn ($q) => $q->select('id', 'first_name', 'last_name', 'profile_image')]);
     }

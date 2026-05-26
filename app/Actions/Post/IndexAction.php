@@ -15,10 +15,9 @@ final class IndexAction
 {
     public function execute(User $user, ?string $cursor = null): CursorPaginator
     {
-        $version = Cache::rememberForever('posts:feed:v:'.$user->id, fn () => 1);
-        $cacheKey = 'posts:feed:v'.$version.':user:'.$user->id.':cursor:'.($cursor ?: 'first');
+        $cacheKey = 'feed:user:'.$user->id.':cursor:'.($cursor ?: 'first');
 
-        return Cache::flexible($cacheKey, [300, 3600], function () use ($user) {
+        return Cache::tags(['posts:feed', 'user:'.$user->id])->flexible($cacheKey, [300, 3600], function () use ($user) {
             $posts = Post::with(['user' => fn ($q) => $q->select('id', 'first_name', 'last_name', 'profile_image')])
                 ->withCount([
                     'comments as comments_count' => fn ($q) => $q->whereNull('parent_id'),
