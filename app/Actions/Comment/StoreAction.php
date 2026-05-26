@@ -28,17 +28,8 @@ class StoreAction
             }
 
 
-            $maxParentDepth = 3;
-            $lineage = [$parent];
-            $cursor = $parent;
-            while ($cursor->parent_id !== null) {
-                $cursor = Comment::query()->findOrFail($cursor->parent_id);
-                $lineage[] = $cursor;
-            }
-
-            $parentDepth = count($lineage);
-            if ($parentDepth > $maxParentDepth) {
-                $effectiveParentId = $lineage[$parentDepth - $maxParentDepth]->id;
+            if ($parent->parent_id !== null) {
+                $effectiveParentId = $parent->parent_id;
             }
         }
 

@@ -9,7 +9,7 @@ class CommentResource extends JsonResource
 {
     private int $depth;
 
-    public function __construct($resource, int $depth = 4)
+    public function __construct($resource, int $depth = 2)
     {
         parent::__construct($resource);
         $this->depth = $depth;
