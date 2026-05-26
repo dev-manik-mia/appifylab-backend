@@ -50,27 +50,5 @@ class CommentSeeder extends Seeder
         foreach (array_chunk($comments, 100) as $chunk) {
             Comment::insert($chunk);
         }
-
-        $topLevel = Comment::whereNull('parent_id')->get();
-
-        $replies = [];
-        foreach ($topLevel as $comment) {
-            $replyCount = fake()->numberBetween(0, 3);
-
-            for ($i = 0; $i < $replyCount; $i++) {
-                $replies[] = [
-                    'user_id' => $userIds->random(),
-                    'post_id' => $comment->post_id,
-                    'parent_id' => $comment->id,
-                    'content' => fake()->paragraph(),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
-
-        foreach (array_chunk($replies, 100) as $chunk) {
-            Comment::insert($chunk);
-        }
     }
 }
