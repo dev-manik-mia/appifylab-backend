@@ -3,8 +3,10 @@
 namespace App\Actions\Comment;
 
 use App\DTOs\Comment\ToggleCommentReactionDTO;
+use App\Models\Comment;
 use App\Models\CommentReaction;
 use App\Models\Reaction;
+use Illuminate\Support\Facades\Cache;
 
 final class ToggleReactionAction
 {
@@ -18,9 +20,11 @@ final class ToggleReactionAction
             if ($existing->reaction_id === $dto->reactionId) {
                 $existing->delete();
 
+                $this->invalidateCache($dto->commentId);
+
                 return [
                     'my_reaction' => null,
-                    'reactions' => $this->getCommentReactions($dto->commentId),
+                    'reactions' => $this->getGroupedReactions($dto->commentId),
                 ];
             }
 
@@ -29,9 +33,11 @@ final class ToggleReactionAction
             /** @var Reaction $reaction */
             $reaction = Reaction::find($dto->reactionId);
 
+            $this->invalidateCache($dto->commentId);
+
             return [
                 'my_reaction' => $reaction->name,
-                'reactions' => $this->getCommentReactions($dto->commentId),
+                'reactions' => $this->getGroupedReactions($dto->commentId),
             ];
         }
 
@@ -44,25 +50,35 @@ final class ToggleReactionAction
         /** @var Reaction $reaction */
         $reaction = Reaction::find($dto->reactionId);
 
+        $this->invalidateCache($dto->commentId);
+
         return [
             'my_reaction' => $reaction->name,
-            'reactions' => $this->getCommentReactions($dto->commentId),
+            'reactions' => $this->getGroupedReactions($dto->commentId),
         ];
     }
 
-    private function getCommentReactions(int $commentId): array
+    private function getGroupedReactions(int $commentId): array
     {
         return CommentReaction::query()->where('comment_id', $commentId)
-            ->with(['user', 'reaction'])
+            ->selectRaw('reaction_id, count(*) as count')
+            ->groupBy('reaction_id')
+            ->with('reaction:id,name')
             ->get()
             ->map(fn (CommentReaction $reactive) => [
-                'id' => $reactive->id,
-                'comment_id' => $reactive->comment_id,
-                'user_id' => $reactive->user_id,
+                'reaction_id' => $reactive->reaction_id,
                 'type' => $reactive->reaction->name,
-                'user' => $reactive->user,
-                'created_at' => $reactive->created_at,
+                'count' => (int) $reactive->count,
             ])
             ->toArray();
+    }
+
+    private function invalidateCache(int $commentId): void
+    {
+        $comment = Comment::select('post_id')->find($commentId);
+
+        if ($comment) {
+            Cache::forget("post:{$comment->post_id}:comments");
+        }
     }
 }

@@ -4,22 +4,18 @@ namespace App\Actions\Post;
 
 use App\Models\Post;
 use App\Models\User;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 
 final class DeleteAction
 {
     public function execute(Post $post, User $user): void
     {
-        if ($post->user_id !== $user->id) {
-            throw new HttpResponseException(
-                response()->json([
-                    'success' => false,
-                    'message' => 'You can only delete your own posts',
-                ], ResponseAlias::HTTP_FORBIDDEN)
-            );
-        }
+        Gate::authorize('delete', $post);
 
         $post->delete();
+
+        Cache::forget("post:{$post->id}");
+        Cache::forget("feed:user:{$user->id}");
     }
 }

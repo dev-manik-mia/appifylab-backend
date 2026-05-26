@@ -8,6 +8,7 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Supports\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class CreateAction
 {
@@ -32,8 +33,10 @@ class CreateAction
             'content' => $dto->content,
         ]);
 
-        $comment->load(['user']);
+        $comment->load(['user' => fn ($q) => $q->select('id', 'first_name', 'last_name', 'profile_image')]);
         $comment->loadCount('likes');
+
+        Cache::forget("post:{$dto->postId}:comments");
 
         return ApiResponse::created(
             new CommentResource($comment),

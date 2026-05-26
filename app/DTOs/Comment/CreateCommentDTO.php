@@ -2,8 +2,7 @@
 
 namespace App\DTOs\Comment;
 
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
 
 readonly class CreateCommentDTO
 {
@@ -14,21 +13,12 @@ readonly class CreateCommentDTO
         public string $content,
     ) {}
 
-    /**
-     * @throws ValidationException
-     */
-    public static function fromRequest(array $data, int $userId, int $postId): self
+    public static function fromRequest(Request $request, int $userId, int $postId): self
     {
-        $validator = Validator::make($data, [
+        $validated = $request->validate([
             'content' => ['required', 'string', 'max:1000'],
             'parent_id' => ['nullable', 'integer', 'exists:comments,id'],
         ]);
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $validated = $validator->validated();
 
         return new self(
             userId: $userId,

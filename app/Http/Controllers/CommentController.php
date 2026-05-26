@@ -11,9 +11,9 @@ use App\Models\Post;
 use App\Supports\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
-use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
-use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class CommentController extends Controller
 {
@@ -22,14 +22,9 @@ class CommentController extends Controller
         private readonly IndexAction $indexCommentAction,
     ) {}
 
-    /**
-     * @throws JWTException
-     */
-    public function index(Post $post): JsonResponse
+    public function index(Request $request, Post $post): JsonResponse
     {
-        $user = JWTAuth::parseToken()->authenticate();
-
-        $comments = $this->indexCommentAction->execute($post, $user);
+        $comments = $this->indexCommentAction->execute($post, $request->user());
 
         return ApiResponse::success(
             CommentResource::collection($comments)
@@ -39,11 +34,9 @@ class CommentController extends Controller
     public function store(Request $request, Post $post): JsonResponse
     {
         try {
-            $user = JWTAuth::parseToken()->authenticate();
-
             $dto = CreateCommentDTO::fromRequest(
-                $request->all(),
-                $user->id,
+                $request,
+                $request->user()->id,
                 $post->id
             );
 
@@ -53,15 +46,13 @@ class CommentController extends Controller
         }
     }
 
-    public function destroy(Comment $comment): JsonResponse
+    public function destroy(Request $request, Comment $comment): JsonResponse
     {
-        $user = JWTAuth::parseToken()->authenticate();
-
-        if ($comment->user_id !== $user->id) {
-            return ApiResponse::forbidden('You can only delete your own comments');
-        }
+        Gate::authorize('delete', $comment);
 
         $comment->delete();
+
+        Cache::forget("post:{$comment->post_id}:comments");
 
         return ApiResponse::success(null, 'Comment deleted successfully');
     }

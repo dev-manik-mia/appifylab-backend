@@ -4,6 +4,7 @@ namespace App\Actions\Post;
 
 use App\DTOs\Post\CreatePostDTO;
 use App\Models\Post;
+use Illuminate\Support\Facades\Cache;
 
 final class StoreAction
 {
@@ -16,6 +17,8 @@ final class StoreAction
             'image' => $dto->imagePath,
         ]);
 
-        return $post->load(['user']);
+        Cache::forget("feed:user:{$dto->userId}");
+
+        return $post->load(['user' => fn ($q) => $q->select('id', 'first_name', 'last_name', 'profile_image')]);
     }
 }

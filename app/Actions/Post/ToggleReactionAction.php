@@ -5,6 +5,7 @@ namespace App\Actions\Post;
 use App\DTOs\Post\TogglePostReactionDTO;
 use App\Models\PostReaction;
 use App\Models\Reaction;
+use Illuminate\Support\Facades\Cache;
 
 final class ToggleReactionAction
 {
@@ -18,9 +19,11 @@ final class ToggleReactionAction
             if ($existing->reaction_id === $dto->reactionId) {
                 $existing->delete();
 
+                Cache::forget("post:{$dto->postId}");
+
                 return [
                     'my_reaction' => null,
-                    'reactions' => $this->getPostReactions($dto->postId),
+                    'reactions' => $this->getGroupedReactions($dto->postId),
                 ];
             }
 
@@ -29,9 +32,11 @@ final class ToggleReactionAction
             /** @var Reaction $reaction */
             $reaction = Reaction::find($dto->reactionId);
 
+            Cache::forget("post:{$dto->postId}");
+
             return [
                 'my_reaction' => $reaction->name,
-                'reactions' => $this->getPostReactions($dto->postId),
+                'reactions' => $this->getGroupedReactions($dto->postId),
             ];
         }
 
@@ -44,24 +49,25 @@ final class ToggleReactionAction
         /** @var Reaction $reaction */
         $reaction = Reaction::find($dto->reactionId);
 
+        Cache::forget("post:{$dto->postId}");
+
         return [
             'my_reaction' => $reaction->name,
-            'reactions' => $this->getPostReactions($dto->postId),
+            'reactions' => $this->getGroupedReactions($dto->postId),
         ];
     }
 
-    private function getPostReactions(int $postId): array
+    private function getGroupedReactions(int $postId): array
     {
         return PostReaction::query()->where('post_id', $postId)
-            ->with(['user', 'reaction'])
+            ->selectRaw('reaction_id, count(*) as count')
+            ->groupBy('reaction_id')
+            ->with('reaction:id,name')
             ->get()
             ->map(fn (PostReaction $reactive) => [
-                'id' => $reactive->id,
-                'post_id' => $reactive->post_id,
-                'user_id' => $reactive->user_id,
+                'reaction_id' => $reactive->reaction_id,
                 'type' => $reactive->reaction->name,
-                'user' => $reactive->user,
-                'created_at' => $reactive->created_at,
+                'count' => (int) $reactive->count,
             ])
             ->toArray();
     }

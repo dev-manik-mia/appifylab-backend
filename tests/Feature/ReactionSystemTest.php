@@ -13,9 +13,9 @@ beforeEach(function () {
     $this->token = JWTAuth::fromUser($this->user);
     $this->headers = ['Authorization' => "Bearer {$this->token}"];
 
-    Reaction::create(['name' => 'like']);
-    Reaction::create(['name' => 'love']);
-    Reaction::create(['name' => 'haha']);
+    $this->like = Reaction::create(['name' => 'like']);
+    $this->love = Reaction::create(['name' => 'love']);
+    $this->haha = Reaction::create(['name' => 'haha']);
 });
 
 it('registers a user', function () {
@@ -65,7 +65,7 @@ it('creates a post', function () {
         ->assertJson(['data' => ['content' => 'Test post content']]);
 });
 
-it('fetches feed with pagination', function () {
+it('fetches feed with cursor pagination', function () {
     $this->user->posts()->createMany([
         ['content' => 'Post 1', 'visibility' => 'public'],
         ['content' => 'Post 2', 'visibility' => 'public'],
@@ -75,7 +75,7 @@ it('fetches feed with pagination', function () {
     $response = $this->withHeaders($this->headers)->getJson('/api/posts');
 
     $response->assertStatus(200)
-        ->assertJsonStructure(['data' => ['data', 'current_page', 'per_page']]);
+        ->assertJsonStructure(['data' => ['data', 'path', 'per_page', 'next_page_url', 'prev_page_url']]);
 });
 
 it('fetches single post with reactions', function () {
@@ -119,14 +119,14 @@ it('toggles reaction on a post', function () {
     $post = $this->user->posts()->create(['content' => 'Test', 'visibility' => 'public']);
 
     $response = $this->withHeaders($this->headers)->postJson("/api/posts/{$post->id}/reactions", [
-        'reaction_id' => 1,
+        'reaction_id' => $this->like->id,
     ]);
 
     $response->assertStatus(200);
     expect(PostReaction::count())->toBe(1);
 
     $this->withHeaders($this->headers)->postJson("/api/posts/{$post->id}/reactions", [
-        'reaction_id' => 1,
+        'reaction_id' => $this->like->id,
     ])->assertStatus(200);
 
     expect(PostReaction::count())->toBe(0);
@@ -137,32 +137,38 @@ it('toggles reaction on a comment', function () {
     $comment = $post->comments()->create(['user_id' => $this->user->id, 'content' => 'Comment']);
 
     $response = $this->withHeaders($this->headers)->postJson("/api/comments/{$comment->id}/reactions", [
-        'reaction_id' => 1,
+        'reaction_id' => $this->like->id,
     ]);
 
     $response->assertStatus(200);
     expect(CommentReaction::count())->toBe(1);
 });
 
-it('lists reactions on a post', function () {
+it('lists grouped reactions on a post', function () {
     $post = $this->user->posts()->create(['content' => 'Test', 'visibility' => 'public']);
-    PostReaction::create(['user_id' => $this->user->id, 'post_id' => $post->id, 'reaction_id' => 1]);
+    PostReaction::create(['user_id' => $this->user->id, 'post_id' => $post->id, 'reaction_id' => $this->like->id]);
 
     $response = $this->withHeaders($this->headers)->getJson("/api/posts/{$post->id}/reactions");
 
     $response->assertStatus(200)
-        ->assertJsonCount(1, 'data');
+        ->assertJsonCount(1, 'data')
+        ->assertJson(['data' => [
+            ['reaction_id' => $this->like->id, 'type' => 'like', 'count' => 1],
+        ]]);
 });
 
-it('lists reactions on a comment', function () {
+it('lists grouped reactions on a comment', function () {
     $post = $this->user->posts()->create(['content' => 'Test', 'visibility' => 'public']);
     $comment = $post->comments()->create(['user_id' => $this->user->id, 'content' => 'Comment']);
-    CommentReaction::create(['user_id' => $this->user->id, 'comment_id' => $comment->id, 'reaction_id' => 1]);
+    CommentReaction::create(['user_id' => $this->user->id, 'comment_id' => $comment->id, 'reaction_id' => $this->like->id]);
 
     $response = $this->withHeaders($this->headers)->getJson("/api/comments/{$comment->id}/reactions");
 
     $response->assertStatus(200)
-        ->assertJsonCount(1, 'data');
+        ->assertJsonCount(1, 'data')
+        ->assertJson(['data' => [
+            ['reaction_id' => $this->like->id, 'type' => 'like', 'count' => 1],
+        ]]);
 });
 
 it('deletes own post', function () {
@@ -197,7 +203,7 @@ it('deletes own comment', function () {
 it('loads comments with likes_count and is_liked', function () {
     $post = $this->user->posts()->create(['content' => 'Test', 'visibility' => 'public']);
     $comment = $post->comments()->create(['user_id' => $this->user->id, 'content' => 'Comment']);
-    PostReaction::create(['user_id' => $this->user->id, 'post_id' => $post->id, 'reaction_id' => 1]);
+    PostReaction::create(['user_id' => $this->user->id, 'post_id' => $post->id, 'reaction_id' => $this->like->id]);
 
     $response = $this->withHeaders($this->headers)->getJson("/api/posts/{$post->id}/comments");
 
@@ -206,7 +212,7 @@ it('loads comments with likes_count and is_liked', function () {
 
 it('includes is_liked and my_reaction in feed', function () {
     $post = $this->user->posts()->create(['content' => 'Test', 'visibility' => 'public']);
-    PostReaction::create(['user_id' => $this->user->id, 'post_id' => $post->id, 'reaction_id' => 1]);
+    PostReaction::create(['user_id' => $this->user->id, 'post_id' => $post->id, 'reaction_id' => $this->like->id]);
 
     $response = $this->withHeaders($this->headers)->getJson('/api/posts');
 
