@@ -6,8 +6,10 @@ use App\Actions\Post\DeleteAction;
 use App\Actions\Post\IndexAction;
 use App\Actions\Post\ShowAction;
 use App\Actions\Post\StoreAction;
+use App\Actions\Post\UpdateAction;
 use App\Actions\Post\UserPostsAction;
 use App\DTOs\Post\CreatePostDTO;
+use App\DTOs\Post\UpdatePostDTO;
 use App\Models\Post;
 use App\Models\User;
 use App\Supports\ApiResponse;
@@ -60,6 +62,20 @@ class PostController extends Controller
         $result = (new ShowAction)->execute($post, $request->user());
 
         return ApiResponse::success($result);
+    }
+
+    public function update(Request $request, Post $post): JsonResponse
+    {
+        try {
+            $dto = UpdatePostDTO::fromRequest($request, $post->id, $request->user()->id);
+            $updatedPost = (new UpdateAction)->execute($dto, $post);
+
+            return ApiResponse::success($updatedPost, 'Post updated successfully');
+        } catch (QueryException $e) {
+            report($e);
+
+            return ApiResponse::error('Failed to update post', 500);
+        }
     }
 
     public function destroy(Request $request, Post $post): JsonResponse
