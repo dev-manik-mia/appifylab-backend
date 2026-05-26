@@ -10,12 +10,14 @@ use App\Supports\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
-class CreateAction
+class StoreAction
 {
     public function execute(CreateCommentDTO $dto): JsonResponse
     {
         /** @var Post|null $post */
         $post = Post::query()->findOrFail($dto->postId);
+
+        $effectiveParentId = $dto->parentId;
 
         if ($dto->parentId) {
             /** @var Comment $parent */
@@ -24,12 +26,26 @@ class CreateAction
             if ($parent->post_id !== $post->id) {
                 return ApiResponse::error('Parent comment does not belong to this post', 422);
             }
+
+
+            $maxParentDepth = 3;
+            $lineage = [$parent];
+            $cursor = $parent;
+            while ($cursor->parent_id !== null) {
+                $cursor = Comment::query()->findOrFail($cursor->parent_id);
+                $lineage[] = $cursor;
+            }
+
+            $parentDepth = count($lineage);
+            if ($parentDepth > $maxParentDepth) {
+                $effectiveParentId = $lineage[$parentDepth - $maxParentDepth]->id;
+            }
         }
 
         $comment = Comment::query()->create([
             'user_id' => $dto->userId,
             'post_id' => $dto->postId,
-            'parent_id' => $dto->parentId,
+            'parent_id' => $effectiveParentId,
             'content' => $dto->content,
         ]);
 

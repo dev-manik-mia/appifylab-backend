@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Comment\CreateAction;
+use App\Actions\Comment\StoreAction;
 use App\Actions\Comment\IndexAction;
 use App\DTOs\Comment\CreateCommentDTO;
 use App\Http\Resources\CommentResource;
@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 class CommentController extends Controller
 {
     public function __construct(
-        private readonly CreateAction $createCommentAction,
+        private readonly StoreAction $createCommentAction,
         private readonly IndexAction $indexCommentAction,
     ) {}
 
