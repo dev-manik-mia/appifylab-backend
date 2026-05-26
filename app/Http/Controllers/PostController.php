@@ -20,7 +20,7 @@ class PostController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $posts = (new IndexAction)->execute($request->user());
+            $posts = (new IndexAction)->execute($request->user(), $request->input('cursor'));
 
             return ApiResponse::success($posts);
         } catch (QueryException $e) {

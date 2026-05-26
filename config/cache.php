@@ -1,5 +1,12 @@
 <?php
 
+use App\Models\Post;
+use App\Models\PostReaction;
+use App\Models\Reaction;
+use App\Models\User;
+use Illuminate\Pagination\Cursor;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 return [
@@ -131,6 +138,16 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        Carbon\Carbon::class,
+        Illuminate\Database\Eloquent\Collection::class,
+        Cursor::class,
+        CursorPaginator::class,
+        Collection::class,
+        Post::class,
+        PostReaction::class,
+        Reaction::class,
+        User::class,
+    ],
 
 ];
